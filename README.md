@@ -4,7 +4,7 @@
 
 Quick and dirty [Strava](https://www.strava.com/dashboard) profile scraper.
 
-Implemented in [1 hour and 31 minutes]() for practise.
+Implemented in [1 hour and 31 minutes](https://github.com/gongahkia/kindaka/commit/6b7fab777b775db8cc0502950e3a1e9892c8d1a9) for practise.
 
 ## Rationale 
 
