@@ -12,15 +12,14 @@ from pathlib import Path
 
 # ----- HELPER FUNCTIONS -----
 
+
 def pretty_print_json(json_object):
     """
     pretty prints the json to
     the cli for easy viewing
     """
     print(json.dumps(json_object, indent=4))
-    
-# FUA Debug this
-# FUA edit the README.md file documentation for the JSON returned after confirming everything works
+
 
 async def scrape_all_strava(athlete_id_array: List[str]) -> Dict[str, Any]:
     """
@@ -31,7 +30,9 @@ async def scrape_all_strava(athlete_id_array: List[str]) -> Dict[str, Any]:
         url = f"https://www.strava.com/athletes/{athlete_id}"
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context(viewport={"width": 1280, "height": 1024})
+            context = await browser.new_context(
+                viewport={"width": 1280, "height": 1024}
+            )
             page = await context.new_page()
             try:
                 await page.goto(url, wait_until="networkidle")
@@ -39,7 +40,9 @@ async def scrape_all_strava(athlete_id_array: List[str]) -> Dict[str, Any]:
                 output_dir.mkdir(exist_ok=True)
                 profile_data = await extract_profile_data(page)
                 stats_data = await extract_stats_data(page)
-                activities_count, activity_screenshots = await extract_activities(page, output_dir)
+                activities_count, activity_screenshots = await extract_activities(
+                    page, output_dir
+                )
                 duration = time.time() - start_time
                 scraped_data = {
                     "metadata": {
@@ -52,13 +55,14 @@ async def scrape_all_strava(athlete_id_array: List[str]) -> Dict[str, Any]:
                         {
                             "profile": profile_data,
                             "stats": stats_data,
-                            "activities": activities_count
+                            "activities": activities_count,
                         }
-                    ]
+                    ],
                 }
                 return scraped_data
             finally:
                 await browser.close()
+
 
 async def scrape_strava(athlete_id: str) -> Dict[str, Any]:
     """
@@ -67,7 +71,7 @@ async def scrape_strava(athlete_id: str) -> Dict[str, Any]:
     start_time = time.time()
     url = f"https://www.strava.com/athletes/{athlete_id}"
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(headless=False)
         context = await browser.new_context(viewport={"width": 1280, "height": 1024})
         page = await context.new_page()
         try:
@@ -76,45 +80,82 @@ async def scrape_strava(athlete_id: str) -> Dict[str, Any]:
             output_dir.mkdir(exist_ok=True)
             profile_data = await extract_profile_data(page)
             stats_data = await extract_stats_data(page)
-            activities_count, activity_screenshots = await extract_activities(page, output_dir)
+            activities_count, activity_screenshots = await extract_activities(
+                page, output_dir
+            )
             duration = time.time() - start_time
             scraped_data = {
                 "metadata": {
                     "date_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "target_url": url,
                     "duration": f"{duration:.2f} seconds",
-                    "num_users": "1",  # Assuming we're scraping a single user profile
+                    "num_users": 1,
                 },
                 "user_data": [
                     {
                         "profile": profile_data,
                         "stats": stats_data,
-                        "activities": activities_count
+                        "activities": activities_count,
                     }
-                ]
+                ],
             }
             return scraped_data
         finally:
             await browser.close()
 
+
 async def extract_profile_data(page: Page) -> Dict[str, Any]:
     """
     extract an athlete's strava profile page user data
     """
-    athlete_name = await page.locator("div.profile-heading.profile.section div.span5 h1.text-title1.athlete-name").inner_text()
-    athlete_join_date = await page.locator("div.profile-heading.profile.section div.span5 h1.text-title1.athlete-name").get_attribute("title") or ""
-    athlete_title = await page.locator("div.profile-heading.profile.section div.span5 div.athlete-title").inner_text()
-    athlete_bio = await page.locator("div.profile-heading.profile.section div.span5 div#athlete-description").inner_text()
-    athlete_profile_image = await page.locator("div.profile-heading.profile.section div.avatar-content img.avatar-img").get_attribute("src") or ""
-    athlete_location = await page.locator("div.profile-heading.profile.section div.span5 div.location").inner_text()
-    following_elements = await page.locator("div.section.connections ul.inline-stats li").all()
+    athlete_name = (
+        await page.locator(
+            "div.profile-heading.profile.section div.spans5 h1.text-title1.athlete-name"
+        ).inner_text()
+        or ""
+    )
+    athlete_join_date = (
+        await page.locator(
+            "div.profile-heading.profile.section div.spans5 h1.text-title1.athlete-name"
+        ).get_attribute("title")
+        or ""
+    )
+    athlete_title = (
+        await page.locator(
+            "div.profile-heading.profile.section div.spans5 div.athlete-title"
+        ).inner_text()
+        or ""
+    )
+    athlete_profile_image = (
+        await page.locator(
+            "div.profile-heading.profile.section div.avatar-content img.avatar-img"
+        ).get_attribute("src")
+        or ""
+    )
+    athlete_location = (
+        await page.locator(
+            "div.profile-heading.profile.section div.spans5 div.location"
+        ).inner_text()
+        or ""
+    )
+    athlete_bio = (
+        await page.locator(
+            "div.profile-heading.profile.section div.spans5 div#athlete-description"
+        ).inner_text()
+        or ""
+    )
+    following_elements = await page.locator(
+        "div.section.connections ul.inline-stats li"
+    ).all()
     athlete_following = ""
     for element in following_elements:
         label = await element.locator("span.label.static-label").inner_text()
         if "Following" in label:
             athlete_following = await element.locator("a").inner_text()
             break
-    followers_elements = await page.locator("div.section.connections ul.inline-stats li").all()
+    followers_elements = await page.locator(
+        "div.section.connections ul.inline-stats li"
+    ).all()
     athlete_followers = ""
     for element in followers_elements:
         label = await element.locator("span.label.static-label").inner_text()
@@ -127,17 +168,17 @@ async def extract_profile_data(page: Page) -> Dict[str, Any]:
         club_title = await club.locator("div").get_attribute("original-title") or ""
         club_url = await club.locator("a").get_attribute("href") or ""
         club_img = await club.locator("img").get_attribute("src") or ""
-        athlete_clubs.append({
-            "title": club_title,
-            "url": club_url,
-            "image": club_img
-        })
+        athlete_clubs.append({"title": club_title, "url": club_url, "image": club_img})
     athlete_gear = []
-    gear_rows = await page.locator("div.section.stats.gear.shoes.hidden table tbody tr").all()
-    for row in gear_rows:
-        gear_text = await row.inner_text()
-        athlete_gear.append(gear_text)
-    return {
+    gear_rows = (
+        await page.locator("div.section.stats.gear.shoes.hidden table tbody tr").all()
+        or []
+    )
+    if gear_rows:
+        for row in gear_rows:
+            gear_text = await row.inner_text()
+            athlete_gear.append(gear_text)
+    data = {
         "athlete_name": athlete_name,
         "athlete_profile_image": athlete_profile_image,
         "athlete_bio": athlete_bio,
@@ -149,35 +190,41 @@ async def extract_profile_data(page: Page) -> Dict[str, Any]:
         "athlete_clubs": athlete_clubs,
         "athlete_gear": athlete_gear,
     }
+    pretty_print_json(data)
+    return data
+
 
 async def extract_stats_data(page: Page) -> Dict[str, Any]:
     """
     extract an athlete's strava profile page stats data
     """
-    total_activities = await page.locator("section.activity-summary-v2 div.activity-count div.count-total").inner_text()
+    total_activities = await page.locator(
+        "section.activity-summary-v2 div.activity-count div.count-total"
+    ).inner_text()
     trophies = []
-    trophy_elements = await page.locator("div#trophy-case-summary ul.list-block-grid.list-trophies li").all()
+    trophy_elements = await page.locator(
+        "div#trophy-case-summary ul.list-block-grid.list-trophies li"
+    ).all()
     for trophy in trophy_elements:
         trophy_title = await trophy.get_attribute("title") or ""
         trophy_url = await trophy.locator("a").get_attribute("href") or ""
-        trophies.append({
-            "title": trophy_title,
-            "url": trophy_url
-        })
+        trophies.append({"title": trophy_title, "url": trophy_url})
     achievements = []
-    achievement_elements = await page.locator("div.section.athlete-achievements ul li").all()
+    achievement_elements = await page.locator(
+        "div.section.athlete-achievements ul li"
+    ).all()
     for achievement in achievement_elements:
         achievement_text = await achievement.inner_text()
-        achievement_date = await achievement.locator("time").get_attribute("datetime") or ""
-        achievements.append({
-            "text": achievement_text,
-            "date": achievement_date
-        })
+        achievement_date = (
+            await achievement.locator("time").get_attribute("datetime") or ""
+        )
+        achievements.append({"text": achievement_text, "date": achievement_date})
     return {
         "total_activities_last_month": total_activities,
         "trophies": trophies,
         "achievements": achievements,
     }
+
 
 async def extract_activities(page: Page, output_dir: Path) -> tuple[int, List[str]]:
     """
@@ -191,15 +238,18 @@ async def extract_activities(page: Page, output_dir: Path) -> tuple[int, List[st
         activity_screenshots.append(str(screenshot_path))
     return len(activity_screenshots), activity_screenshots
 
+
 async def main():
     """
     main scraper function for debugging
     """
-    url = "https://www.strava.com/athletes/example"  
-    result = await scrape_strava_profile(url)
-    with open("strava_profile_data.json", "w", encoding="utf-8") as f:
+    athlete_id = "26683816"
+    log_filepath = "log.json"
+    result = await scrape_strava(athlete_id)
+    with open(log_filepath, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
-    print(f"Scraping completed. Data saved to strava_profile_data.json")
+    print(f"Scraping completed. Data saved to {log_filepath}")
+
 
 # ----- SAMPLE EXECUTION CODE -----
 
