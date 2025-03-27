@@ -1,10 +1,10 @@
 [![](https://img.shields.io/badge/kindaka_1.0.0-passing-green)](https://github.com/gongahkia/kindaka/releases/tag/1.0.0) 
 
-# `Bumi`
+# `Kindaka`
 
 Quick and dirty [Strava](https://www.strava.com/dashboard) profile scraper.
 
-Implemented in [1 hour and 31 minutes](https://github.com/gongahkia/kindaka/commit/6b7fab777b775db8cc0502950e3a1e9892c8d1a9) for practise.
+Implemented in [2 hour and 9 minutes](https://github.com/gongahkia/kindaka/commit/6b7fab777b775db8cc0502950e3a1e9892c8d1a9) for practise.
 
 ## Rationale 
 
@@ -32,7 +32,7 @@ MANY_STRAVA_PROFILES = ["athlete_id_1", "athlete_id_2", "athlete_id_3"]
 all_results = kin.scrape_all_strava(MANY_STRAVA_PROFILES)
 ```
 
-3. Scraped output is returned as a dictionary.
+3. Scraped output is returned as a dictionary under `log.json`. Athlete's recent activities are returned as screenshots, stored within the `activity_screenshots` directory.
 
 ```json
 scraped_data = {
@@ -52,25 +52,14 @@ scraped_data = {
                 "athlete_following": "",
                 "athlete_followers": "",
                 "athlete_clubs": [],
-                "athlete_gear": {
-                    "shoes": [],
-                    "bikes": [],
-                }
+                "athlete_gear": [],
             },
             "stats": {
                 "total_activities_last_month": "",
-                "trophies": "",
-                "achievements": "",
+                "trophies": [],
+                "achievements": [],
             },
-            "activities": [
-                {
-                    "activity_name": "",
-                    "activity_datetime": "",
-                    "activity_description": "",
-                    "activity_breakdown": "",
-                    "activity_achievements": "",
-                }
-            ]
+            "activities": "",
         }
     ]
 }
